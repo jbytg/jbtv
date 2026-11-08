@@ -1,8 +1,8 @@
 // JB TV – tiny CORS proxy for Cloudflare Workers (free plan is enough to start)
-// Deploy: dash.cloudflare.com → Workers & Pages → Create → "Hello World" → paste this → Deploy.
+// Deploy: dash.cloudflare.com → Workers & Pages → Create → Create Worker → Edit code → paste this → Deploy.
 // Then in index.html set:  const PROXY = 'https://YOUR-WORKER.workers.dev/?url=';
-// Only your own site can use it: put your domain in ALLOWED (leave [] to allow everyone).
-const ALLOWED = ['https://tv.jbhub.ryzn.pro', 'https://jbhub.ryzn.pro']; // only your site can use this proxy
+// Only your own site can use it: your domains are listed in ALLOWED (leave [] to allow everyone).
+const ALLOWED = ['https://tv.jbhub.ryzn.pro', 'https://jbhub.ryzn.pro'];
 
 export default {
   async fetch(req) {
@@ -26,20 +26,33 @@ export default {
 
     const h = new Headers(up.headers);
     Object.entries(cors).forEach(([k, v]) => h.set(k, v));
-    const isM3U8 = /mpegurl/i.test(up.headers.get('content-type') || '') || /\.m3u8(\?|$)/i.test(target);
-    if (!isM3U8) return new Response(up.body, { status: up.status, headers: h });
+    const ct = up.headers.get('content-type') || '';
+    const looksM3U8 = /mpegurl/i.test(ct) || /\.m3u8?(\?|$)/i.test(target);
+    const isMedia = /^(video|audio|image)\//i.test(ct) || /\.(ts|m4s|mp4|aac|m4a|key|vtt|jpe?g|png)(\?|$)/i.test(target);
 
-    // Rewrite playlist so every segment / sub-playlist also goes through this proxy
+    let body = up.body, text = null;
+    if (looksM3U8) text = await up.text();
+    else if (!isMedia && up.body) { // unknown type: peek at the first bytes to spot playlists with odd names
+      const [a, b] = up.body.tee();
+      const reader = a.getReader(), { value } = await reader.read();
+      reader.cancel();
+      if (value && new TextDecoder().decode(value.slice(0, 10)).replace(/^\uFEFF/, '').startsWith('#EXTM3U')) text = await new Response(b).text();
+      else body = b;
+    }
+    if (text === null) return new Response(body, { status: up.status, headers: h });
+
+    // Rewrite the playlist so every segment / sub-playlist also goes through this proxy
     const self = u.origin + u.pathname + '?url=';
-    const abs = x => self + encodeURIComponent(new URL(x, up.url).href);
-    const text = (await up.text()).split('\n').map(line => {
+    const base = up.url || target;
+    const abs = x => { try { return self + encodeURIComponent(new URL(x, base).href); } catch (e) { return x; } };
+    text = text.split('\n').map(line => {
       const t = line.trim();
       if (!t) return line;
       if (t.startsWith('#')) return line.replace(/URI="([^"]+)"/g, (_, x) => `URI="${abs(x)}"`);
       return abs(t);
     }).join('\n');
     h.delete('content-length'); h.delete('content-encoding');
-    h.set('content-type', 'application/vnd.apple.mpegurl');
+    h.set('content-type', 'application/vnd.apple.mpegurl'); h.set('cache-control', 'no-store');
     return new Response(text, { status: up.status, headers: h });
   },
 };

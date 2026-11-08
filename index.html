@@ -7,6 +7,9 @@
 <meta name="description" content="Watch thousands of live TV channels from around the world free on JB TV. Search by name, filter by category or language, and stream in a fast player on mobile, tablet or desktop.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#0f0f0f">
+<link rel="preconnect" href="https://iptv-org.github.io" crossorigin>
+<link rel="preconnect" href="https://archive.org" crossorigin>
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <link rel="canonical" href="https://tv.jbhub.ryzn.pro/">
 <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png?v=1" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg?v=1" />
@@ -32,7 +35,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","name":"JB TV","url":"https://tv.jbhub.ryzn.pro/","description":"Free web player for thousands of live TV channels from around the world.","applicationCategory":"EntertainmentApplication","operatingSystem":"Any","image":"https://tv.jbhub.ryzn.pro/og-image.png","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
 </script>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js" defer></script>
 <style>
   :root{--glow:#ef444424;--bg:#0f0f0f;--fg:#f1f1f1;--card:#1f1f1f;--chip:#272727;--chiph:#3f3f3f;--bord:#ffffff2e;--input:#121212;--muted:#9ca3af}
   html.light{--glow:#ef444416;--bg:#ffffff;--fg:#0f0f0f;--card:#ececec;--chip:#f0f0f0;--chiph:#e0e0e0;--bord:#00000026;--input:#ffffff;--muted:#606060}
@@ -54,6 +57,27 @@
   @media (hover:none){.del{opacity:1}}
   .toast-in{animation:toastIn .3s cubic-bezier(.2,.8,.2,1)}@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}}
   .sec{display:flex;align-items:center;gap:.5rem;font-weight:600}.sec:before{content:"";width:4px;height:1.1rem;border-radius:4px;background:#ef4444}
+  :root{--accent:#dc2626}
+  .bg-red-600,.\!bg-red-600,.hover\:bg-red-600:hover{background-color:var(--accent)!important}
+  .text-red-500,.text-red-400,.hover\:text-red-500:hover{color:var(--accent)!important}
+  .border-t-red-500{border-top-color:var(--accent)!important}
+  .sec:before{background:var(--accent)}
+  .brand-text{background:linear-gradient(90deg,var(--accent),#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:70;transition:width .1s}
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.16;pointer-events:none;z-index:-1;animation:orb 18s ease-in-out infinite alternate}
+  html.light .orb{opacity:.09}
+  @keyframes orb{to{transform:translate(60px,40px) scale(1.2)}}
+  .hero{position:relative;overflow:hidden;border-radius:1.25rem;padding:1.4rem;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 30%,transparent),transparent 65%),var(--card)}
+  .hero:after{content:"";position:absolute;inset:-60%;background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--accent) 22%,transparent),transparent 30%);animation:heroSpin 16s linear infinite;pointer-events:none}
+  .hero>*{position:relative;z-index:1}
+  @keyframes heroSpin{to{transform:rotate(360deg)}}
+  .stat b{font-size:1.5rem;font-weight:800}
+  .fv{opacity:0;transition:opacity .2s,background .2s,transform .15s}
+  article:hover .fv,.fv.saved,.fv:focus{opacity:1}
+  @media (hover:none){.fv{opacity:1}}
+  #grid article,#movGrid article{content-visibility:auto;contain-intrinsic-size:auto 200px}
+  #accents button{width:1.5rem;height:1.5rem;border-radius:9999px;transition:transform .15s}
+  #accents button:hover{transform:scale(1.15)}#accents button.on{outline:2px solid var(--fg);outline-offset:2px}
   .btn.hidden{display:none}
   @media (max-width:767px){ /* movies on phones: controls sit below the video. Live TV keeps the overlay controls. */
     #stage.movie:not(:fullscreen):not(.mini) #ctl{position:static;background:#0c0c0c;opacity:1!important;transform:none!important;pointer-events:auto!important}
@@ -71,7 +95,7 @@
   @keyframes hintPop{0%{opacity:0;transform:translateY(-50%) scale(.7)}20%{opacity:1;transform:translateY(-50%) scale(1)}80%{opacity:1;transform:translateY(-50%)}100%{opacity:0;transform:translateY(-50%) scale(1.05)}}
   .mv{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
   .heart{transition:background .2s,transform .15s}.heart:active{transform:scale(.85)}
-  .heart.saved{background:#dc2626;color:#fff}.heart.saved svg{fill:currentColor}
+  .heart.saved{background:var(--accent)!important;color:#fff}.heart.saved svg{fill:currentColor}
   .thumb{transition:transform .25s,box-shadow .25s}
   article:hover .thumb{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 28px #0006}
   #grid article,#related article{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
@@ -122,6 +146,9 @@
 </head>
 <body>
 <h1 class="sr-only">JB TV – Watch live TV channels online for free</h1>
+<div id="progress"></div>
+<div class="orb" style="width:380px;height:380px;background:var(--accent);top:-120px;left:-100px"></div>
+<div class="orb" style="width:320px;height:320px;background:#3b82f6;bottom:-120px;right:-80px;animation-delay:-6s"></div>
 <noscript><p style="padding:2rem;text-align:center">JB TV needs JavaScript to browse and play live TV channels. Please enable JavaScript and reload.</p></noscript>
 <header class="sticky top-0 z-30 t-bg2 backdrop-blur border-b t-bord px-3 py-2 flex flex-wrap items-center gap-2">
   <div class="flex items-center gap-2 font-extrabold text-lg mr-2 tracking-tight"><img data-logo alt="JB TV logo" class="h-8 w-auto drop-shadow">JB TV</div>
@@ -134,8 +161,19 @@
 </header>
 
 <main class="p-3 sm:p-5">
-  <div id="tabs" class="flex gap-2 mb-3"><button class="chip on" data-tab="tv">Live TV</button><button class="chip" data-tab="mov">Movies &amp; TV</button></div>
+  <div id="tabs" class="flex gap-2 mb-3"><button class="chip on" data-tab="tv">Live TV</button><button class="chip" data-tab="mov">Movies &amp; TV</button><button class="chip" data-tab="radio">Radio</button></div>
   <div id="liveView">
+  <section id="hero" class="hero mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-5">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight"><span class="brand-text">The world is live.</span></h2>
+        <p class="t-muted mt-1 text-sm max-w-md">Thousands of free channels, movies and radio stations. Pick something and press play.</p>
+        <div class="flex flex-wrap gap-2 mt-3"><button id="heroRnd" class="btn !bg-red-600 !text-white" data-ic="shuffle">Surprise me</button><button id="heroMov" class="btn" data-ic="play">Movies</button><button id="heroRadio" class="btn" data-ic="radio">Radio</button></div>
+      </div>
+      <div class="flex gap-6 text-center stat"><div><b id="stCh">0</b><p class="text-xs t-muted">channels</p></div><div><b id="stLang">0</b><p class="text-xs t-muted">languages</p></div><div><b id="stCat">0</b><p class="text-xs t-muted">categories</p></div></div>
+    </div>
+  </section>
+  <section id="picksWrap" class="hidden mb-6"><h2 class="sec mb-2">Today's picks</h2><div id="picks" class="no-scrollbar flex gap-3 overflow-x-auto pb-2"></div></section>
   <div id="status" class="text-center t-muted py-20"><img data-logo alt="" class="h-16 w-auto mx-auto mb-3 animate-pulse">Loading playlist…</div>
   <div id="chips" class="no-scrollbar flex gap-2 overflow-x-auto pb-3 mb-2"></div>
   <section id="recentWrap" class="hidden mb-6">
@@ -146,6 +184,7 @@
     <span id="count" class="text-xs t-muted mr-auto"></span>
     <button id="hideBtn" class="btn !py-1.5 !px-3 text-xs" title="Hide channels that failed on this site"></button>
     <button id="clearBtn" class="btn !py-1.5 !px-3 text-xs hidden" title="Clear search, category and language">Clear filters</button>
+    <button id="proxyTest" class="btn !py-1.5 !px-3 text-xs" title="Check that the proxy works">Test proxy</button>
     <button id="proxyBtn" class="btn !py-1.5 !px-3 text-xs" title="Use a proxy for blocked or HTTP-only streams. Turn it off if it causes problems."></button>
     <button id="rndBtn" class="btn !py-1.5 !px-3 text-xs" title="Play a random channel from this list" data-ic="shuffle">Surprise me</button>
     <button id="scanBtn" class="btn !py-1.5 !px-3 text-xs" title="Check which channels work on this site" data-ic="scan">Scan list</button>
@@ -160,7 +199,7 @@
   <div class="text-center mt-8"><button id="more" class="btn hidden">Load more</button></div>
 </div>
   <section id="movies" class="hidden">
-    <h2 class="sec">Movies &amp; TV</h2>
+    <div class="flex items-center justify-between gap-3"><h2 class="sec">Movies &amp; TV</h2><button id="movRnd" class="btn !py-1.5 !px-3 text-xs" data-ic="shuffle">Surprise me</button></div>
     <p class="text-xs t-muted mt-1">Free public-domain and openly licensed films from the Internet Archive, in many languages. Search by title in the box above.</p>
     <div id="movChips" class="no-scrollbar flex gap-2 overflow-x-auto pb-3 mb-2 mt-3"></div>
     <div class="flex flex-wrap items-center gap-2 mb-3 text-xs"><span class="t-muted">Maturity</span><div id="matChips" class="flex gap-2"><button class="chip" data-mat="all">All</button><button class="chip" data-mat="safe">Hide mature</button><button class="chip" data-mat="family">Family</button></div><span class="t-muted">Based on tags, not official ratings</span></div>
@@ -169,11 +208,18 @@
     <div id="movGrid" class="grid gap-x-4 gap-y-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"></div>
     <div class="text-center mt-8"><button id="movMore" class="btn hidden">Load more</button></div>
   </section>
+  <section id="radio" class="hidden">
+    <h2 class="sec">Radio</h2>
+    <p class="text-xs t-muted mt-1">Free internet radio stations from around the world, from the community Radio Browser directory. Search by name or pick a genre.</p>
+    <div id="radioChips" class="no-scrollbar flex gap-2 overflow-x-auto pb-3 mb-2 mt-3"></div>
+    <div id="radioStatus" class="text-sm t-muted mb-3"></div>
+    <div id="radioGrid" class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+  </section>
 </main>
 <footer class="text-center text-xs t-muted px-4 pb-10 pt-4">
   <p class="max-w-2xl mx-auto mb-3">Watch live TV online with JB TV: thousands of news, sports, movies, music, kids and entertainment channels from around the world. Search by name, filter by category or language, and stream in your browser on mobile, tablet or desktop.</p>
   JB TV · Streams come from public playlists and belong to their owners ·
-  <button id="aboutLink" class="underline hover:text-red-500 transition-colors">About us</button>
+  <button id="aboutLink" class="underline hover:text-red-500 transition-colors">About us</button> · <button id="keysLink" class="underline hover:text-red-500 transition-colors">Shortcuts</button>
 </footer>
 
 <!-- Watch page -->
@@ -215,11 +261,29 @@
       <li class="flex gap-2" style="--i:7"><span data-ic="check" class="text-red-500 shrink-0 mt-0.5"></span>Free public-domain movies with Save and Continue watching</li>
     </ul>
     <p class="stag mt-5 text-xs t-muted"><span style="--i:7">Shortcuts: <b>Space/K</b> play·pause, <b>F</b> fullscreen, <b>M</b> mute, <b>A</b> aspect, <b>/</b> search, <b>Esc</b> back.</span></p>
+    <div id="accents" class="stag mt-4 flex items-center justify-center gap-2"><span class="text-xs t-muted mr-1" style="--i:8">Accent</span><button data-a="#dc2626" style="background:#dc2626"></button><button data-a="#2563eb" style="background:#2563eb"></button><button data-a="#16a34a" style="background:#16a34a"></button><button data-a="#9333ea" style="background:#9333ea"></button><button data-a="#ea580c" style="background:#ea580c"></button><button data-a="#db2777" style="background:#db2777"></button></div>
     <p class="stag mt-4 text-xs t-muted rounded-xl t-card p-3"><span style="--i:8">JB TV does not host, store or upload any video. Channels come from the public iptv-org playlists and belong to their respective owners; some may be offline or region-locked. Player powered by HLS.js.</span></p>
   </div>
 </div>
 <div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-full bg-[#272727] text-white text-sm pl-4 pr-2 py-2 shadow-2xl ring-1 ring-white/10"><span id="toastTxt"></span><button id="toastAct" class="btn !py-1 !px-3 text-xs !bg-white/15 hidden">Undo</button></div>
 <button id="toTop" class="btn hidden fixed bottom-4 left-4 z-40 !p-3 shadow-lg ring-1 ring-white/10" title="Back to top" data-ic="up"></button>
+<div id="radioBar" class="hidden fixed bottom-0 inset-x-0 z-[45] t-bg2 backdrop-blur border-t t-bord px-3 py-2 flex items-center gap-3">
+  <span class="w-10 h-10 rounded-lg bg-red-600 text-white flex items-center justify-center shrink-0" data-ic="radio"></span>
+  <div class="min-w-0 flex-1"><p id="rbName" class="font-medium truncate text-sm"></p><p id="rbMeta" class="text-xs t-muted truncate"></p></div>
+  <input id="rbVol" type="range" min="0" max="1" step="0.01" value="1" class="hidden sm:block w-24" title="Volume">
+  <button id="rbPlay" class="btn" title="Play / Pause"></button><button id="rbClose" class="btn" title="Stop" data-ic="close"></button>
+</div>
+<div id="keys" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div id="keysCard" class="t-bg rounded-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto p-6 shadow-2xl ring-1 ring-white/10 relative">
+    <button id="keysClose" class="btn absolute top-3 right-3 !p-2" title="Close" data-ic="close"></button>
+    <h2 class="text-xl font-bold mb-3">Keyboard shortcuts</h2>
+    <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+      <dt><b>Space / K</b></dt><dd class="t-muted">Play / pause</dd><dt><b>F</b></dt><dd class="t-muted">Fullscreen</dd><dt><b>M</b></dt><dd class="t-muted">Mute</dd><dt><b>A</b></dt><dd class="t-muted">Fit / Stretch / Crop</dd>
+      <dt><b>J / L</b></dt><dd class="t-muted">Back / forward 10 s (movies)</dd><dt><b>← / →</b></dt><dd class="t-muted">Back / forward 5 s (movies)</dd><dt><b>0–9</b></dt><dd class="t-muted">Jump to 0–90% (movies)</dd><dt><b>&lt; / &gt;</b></dt><dd class="t-muted">Slower / faster (movies)</dd>
+      <dt><b>/</b></dt><dd class="t-muted">Search</dd><dt><b>?</b></dt><dd class="t-muted">This list</dd><dt><b>Esc</b></dt><dd class="t-muted">Back / close</dd>
+    </dl>
+  </div>
+</div>
 <div id="age" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
   <div id="ageCard" class="t-bg rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl ring-1 ring-white/10">
     <div class="w-14 h-14 mx-auto rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-extrabold">18+</div>
@@ -276,7 +340,7 @@
 // ---- Config ----
 const PLAYLIST = 'https://iptv-org.github.io/iptv/index.m3u';
 // Optional CORS proxy, used automatically when a stream is blocked. Deploy cors-proxy-worker.js, then e.g. 'https://jb-proxy.yourname.workers.dev/?url='
-const PROXY = 'jb-proxy.johanbiju15.workers.dev/?url=';
+const PROXY = '';
 const LANG_PLAYLIST = 'https://iptv-org.github.io/iptv/index.language.m3u'; // used for the language filter
 const PAGE = 60;
 const BASE_TITLE = document.title;
@@ -307,6 +371,7 @@ const P = {
   back10:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><text x="12" y="15.5" font-size="7.5" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">10</text>',
   fwd10:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/><text x="12" y="15.5" font-size="7.5" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">10</text>',
   external:'<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  radio:'<circle cx="12" cy="12" r="2"/><path d="M4.9 19.1a10 10 0 0 1 0-14.2M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M19.1 4.9a10 10 0 0 1 0 14.2"/>',
   heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
   shuffle:'<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
   up:'<path d="m18 15-6-6-6 6"/>',
@@ -353,7 +418,7 @@ async function load() {
     if (P.get('q')) $('q').value = P.get('q');
     if (cats.includes(P.get('cat'))) $('cat').value = P.get('cat');
     $('status').classList.add('hidden');
-    applyFilter(); loadLangs(langReq);
+    applyFilter(); loadLangs(langReq); buildHome();
     if (deep) { const ch = channels.find(c => chId(c) === deep); if (ch) openWatch(ch); }
   } catch (e) {
     $('grid').innerHTML = '';
@@ -382,7 +447,7 @@ async function loadLangs(req) {
     if (!langRetried) { langRetried = true; setTimeout(() => loadLangs(fetchLangText()), 4000); }
     return;
   }
-  langState = 'ready'; sel.options[0].textContent = 'All languages';
+  langState = 'ready'; sel.options[0].textContent = 'All languages'; countUp($('stLang'), langs.length);
   sel.insertAdjacentHTML('beforeend', langs.map(l => `<option>${esc(l)}</option>`).join(''));
   re(sel, 'pop');
   if (wantLang && langs.includes(wantLang)) { sel.value = wantLang; wantLang = ''; applyFilter(); }
@@ -400,7 +465,9 @@ try { hideBad = localStorage.getItem('jbHide') !== '0'; } catch (e) {}
 const saveSets = () => { store.set('jbBad', [...bad]); store.set('jbGood', [...good]); };
 function refreshBar() {
   syncChips(); syncProxyUi();
-  $('clearBtn').classList.toggle('hidden', !($('q').value.trim() || $('cat').value || $('lang').value));
+  const fOn = !!($('q').value.trim() || $('cat').value || $('lang').value || favOnly);
+  $('clearBtn').classList.toggle('hidden', !fOn);
+  $('hero').classList.toggle('hidden', fOn); $('picksWrap').classList.toggle('hidden', fOn || !$('picks').children.length);
   $('bar').classList.remove('hidden');
   const n = channels.reduce((a, c) => a + (bad.has(c.url) ? 1 : 0), 0);
   $('count').textContent = `${filtered.length.toLocaleString()} channels` + (hideBad && n ? ` · ${n.toLocaleString()} hidden` : '');
@@ -456,7 +523,10 @@ const PUBLIC_PROXIES = [ // free third-party proxies: can be slow, rate-limited 
 ];
 const PLABEL = { off: 'Off', public: 'Public', worker: 'Your proxy' };
 let proxyMode = PROXY ? 'worker' : 'public';
-try { const m = localStorage.getItem('jbProxy'); if (m === 'off' || m === 'public' || (m === 'worker' && PROXY)) proxyMode = m; } catch (e) {}
+try {
+  const m = localStorage.getItem('jbProxy'); if (m === 'off' || m === 'public' || (m === 'worker' && PROXY)) proxyMode = m;
+  if (PROXY && localStorage.getItem('jbProxyUrl') !== PROXY) { proxyMode = 'worker'; localStorage.setItem('jbProxy', 'worker'); localStorage.setItem('jbProxyUrl', PROXY); }
+} catch (e) {}
 const proxyList = () => proxyMode === 'off' ? [] : proxyMode === 'public' ? PUBLIC_PROXIES
   : [{ name: 'Your proxy', wrap: u => u.startsWith(PROXY) ? u : PROXY + encodeURIComponent(u) }];
 function syncProxyUi() {
@@ -473,11 +543,30 @@ async function proxyHealthy(p) { // fetch a tiny known page through the proxy
   catch (e) { return false; }
 }
 $('proxyBtn').onclick = cycleProxy;
+async function testProxy() { // tells you exactly where the proxy setup is failing
+  const list = proxyList();
+  if (!list.length) return alert('Proxy is Off. Press the Proxy button to choose Public or Your proxy, then test again.');
+  if (proxyMode === 'worker' && !PROXY) return alert('The PROXY address in index.html is empty. Paste your Cloudflare Worker address there first.');
+  const px = list[0], out = ['Mode: ' + PLABEL[proxyMode]];
+  try {
+    const r1 = await fetch(px.wrap('https://example.com/'), { cache: 'no-store' }), t1 = r1.ok ? await r1.text() : '';
+    if (r1.ok && t1.includes('Example Domain')) out.push('OK: the proxy reaches the internet.');
+    else { out.push(`FAIL: the proxy answered ${r1.status}.` + (r1.status === 403 ? ' Your site address is not in the ALLOWED list of the worker.' : '')); return alert(out.join('\n')); }
+  } catch (e) { return alert(out.concat('FAIL: could not reach the proxy. Check the address after PROXY (it must end with /?url=), that the worker is deployed, and that you uploaded the new index.html.').join('\n')); }
+  try {
+    const r2 = await fetch(px.wrap('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'), { cache: 'no-store' }), t2 = await r2.text();
+    if (!r2.ok || !t2.startsWith('#EXTM3U')) out.push(`FAIL: a public test stream did not load (${r2.status}). It may be down; try again later.`);
+    else if (proxyMode === 'worker') out.push(t2.includes('?url=') ? 'OK: playlist rewriting works. Channels that still fail are blocked by their own servers (offline, region-locked, or refusing Cloudflare).' : 'FAIL: playlists are not rewritten. Paste the latest cors-proxy-worker.js into your worker and deploy it again.');
+    else out.push('OK: the test stream loads.');
+  } catch (e) { out.push('FAIL: the test stream could not be loaded through the proxy.'); }
+  alert(out.join('\n'));
+}
+$('proxyTest').onclick = testProxy;
 
 // ---- Movies (Internet Archive: public-domain and openly licensed films) ----
 const IA = 'https://archive.org';
-const GENRES = [['Comedy', 'comedy'], ['Drama', 'drama'], ['Horror', 'horror'], ['Sci-Fi', 'sci-fi'], ['Western', 'western'], ['Film Noir', 'film noir'], ['Animation', 'animation'], ['Documentary', 'documentary'], ['Romance', 'romance'], ['Mystery', 'mystery'], ['Silent', 'silent film']];
-const MOVCH = [['discover', '', 'Popular'], ['latest', '', 'Latest added'], ['newest', '', 'Newest films'], ['series', '', 'TV Series'], ['saved', '', 'Saved'], ['recent', '', 'Continue watching'], ['cartoons', '', 'Cartoons'], ...GENRES.map(([l, g]) => ['discover', g, l])];
+const GENRES = [['Comedy', 'comedy'], ['Drama', 'drama'], ['Horror', 'horror'], ['Sci-Fi', 'sci-fi'], ['Western', 'western'], ['Film Noir', 'film noir'], ['Animation', 'animation'], ['Documentary', 'documentary'], ['Romance', 'romance'], ['Mystery', 'mystery'], ['Silent', 'silent film'], ['Musical', 'musical'], ['Adventure', 'adventure'], ['Crime', 'crime'], ['War', 'war'], ['Thriller', 'thriller'], ['Fantasy', 'fantasy'], ['Educational', 'educational'], ['Short films', 'short film']];
+const MOVCH = [['discover', '', 'Popular'], ['latest', '', 'Latest added'], ['newest', '', 'Newest films'], ['series', '', 'TV Series'], ['saved', '', 'Saved'], ['recent', '', 'Continue watching'], ['cartoons', '', 'Cartoons'], ['vintage', '', 'Vintage cartoons'], ['ephemeral', '', 'Ephemeral films'], ...GENRES.map(([l, g]) => ['discover', g, l])];
 const getObj = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } };
 const setObj = (k, x) => { try { localStorage.setItem(k, JSON.stringify(x)); } catch (e) {} };
 let movSaved = getObj('jbMovSaved', []), movPos = getObj('jbMovPos', {});
@@ -494,7 +583,7 @@ $('movLang').onchange = e => {
   movLang = e.target.value; try { localStorage.setItem('jbMovLang', movLang); } catch (x) {}
   if (tab === 'mov' && movKind !== 'saved' && movKind !== 'recent') renderMovies();
 };
-const qStore = { tv: '', mov: '' };
+const qStore = { tv: '', mov: '', radio: '' };
 let movMat = 'safe'; try { movMat = localStorage.getItem('jbMat') || 'safe'; } catch (e) {}
 function syncMat() { document.querySelectorAll('#matChips .chip').forEach(b => b.classList.toggle('on', b.dataset.mat === movMat)); }
 $('matChips').onclick = e => {
@@ -508,7 +597,7 @@ const one = x => Array.isArray(x) ? x[0] : x;
 const MATURE = 'horror OR erotic OR erotica OR nudity OR sexploitation OR exploitation OR gore OR grindhouse OR "x-rated" OR pornography';
 const MATURE_TITLE = 'nude OR nudist OR erotic OR sex OR sexy OR porn';
 const MAIN = 'feature_films OR film_noir OR silent_films OR scifi_horror OR comedy_films';
-const KIND_COLL = { series: 'classic_tv', cartoons: 'animationandcartoons' }, KIND_SORT = { latest: 'addeddate desc', newest: 'year desc' };
+const KIND_COLL = { series: 'classic_tv', cartoons: 'animationandcartoons', vintage: 'vintage_cartoons', ephemeral: 'prelinger' }, KIND_SORT = { latest: 'addeddate desc', newest: 'year desc' };
 async function iaSearch(q, subject, page, mat = 'all', coll = MAIN, sort = 'downloads desc', lang = '') {
   const parts = [`collection:(${coll})`, 'mediatype:(movies)'];
   const clean = q.replace(/[^\p{L}\p{N} ]/gu, ' ').trim();
@@ -526,7 +615,7 @@ async function iaSearch(q, subject, page, mat = 'all', coll = MAIN, sort = 'down
   return (await r.json()).response;
 }
 const movCard = (m, i, pct) => `<article data-mid="${esc(m.id)}" data-title="${esc(m.title)}" data-file="${esc(m.file || '')}" data-m="${m.mature ? 1 : 0}" class="mv group cursor-pointer" style="animation-delay:${Math.min(i, 24) * 30}ms">
-  <div class="thumb relative aspect-video rounded-xl t-card overflow-hidden flex items-center justify-center"><span class="text-2xl font-bold text-gray-600">${esc((m.title || '').slice(0, 2).toUpperCase())}</span><img src="${IA}/services/img/${encodeURIComponent(m.id)}" loading="lazy" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover ${m.mature ? 'blur-md scale-110' : ''}">
+  <div class="thumb relative aspect-video rounded-xl t-card overflow-hidden flex items-center justify-center"><span class="text-2xl font-bold text-gray-600">${esc((m.title || '').slice(0, 2).toUpperCase())}</span><img src="${IA}/services/img/${encodeURIComponent(m.id)}" loading="lazy" decoding="async" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover ${m.mature ? 'blur-md scale-110' : ''}">
     ${m.mature ? '<span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold">18+</span>' : ''}
     <button data-save="${esc(m.id)}" class="heart absolute top-1.5 right-1.5 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-600 ${isSaved(m.id) ? 'saved' : ''}" title="Save">${ic('heart', 16)}</button>
     ${pct ? `<div class="absolute bottom-0 left-0 h-1 bg-red-600" style="width:${pct}%"></div>` : ''}</div>
@@ -559,13 +648,13 @@ function searchMovies() { if (movKind === 'saved' || movKind === 'recent') { mov
 function buildMovChips() { $('movChips').innerHTML = MOVCH.map(([k, g, l], i) => `<button class="chip" data-i="${i}">${l}</button>`).join(''); }
 function setTab(t) {
   stopQueued(); qStore[tab] = $('q').value; tab = t;
-  const mv = t === 'mov';
-  $('liveView').classList.toggle('hidden', mv); $('movies').classList.toggle('hidden', !mv);
-  $('cat').classList.toggle('hidden', mv); $('lang').classList.toggle('hidden', mv);
+  const tv = t === 'tv';
+  $('liveView').classList.toggle('hidden', !tv); $('movies').classList.toggle('hidden', t !== 'mov'); $('radio').classList.toggle('hidden', t !== 'radio');
+  $('cat').classList.toggle('hidden', !tv); $('lang').classList.toggle('hidden', !tv);
   document.querySelectorAll('#tabs .chip').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
-  $('q').placeholder = mv ? 'Search movies…' : 'Search channels…'; $('q').value = qStore[t];
-  try { history.replaceState(history.state, '', mv ? '?tab=movies' : location.pathname + filterQuery()); } catch (e) {}
-  if (mv) renderMovies(); else if (channels.length) applyFilter();
+  $('q').placeholder = { tv: 'Search channels…', mov: 'Search movies & TV…', radio: 'Search radio stations…' }[t]; $('q').value = qStore[t] || '';
+  try { history.replaceState(history.state, '', t === 'mov' ? '?tab=movies' : t === 'radio' ? '?tab=radio' : location.pathname + filterQuery()); } catch (e) {}
+  if (t === 'mov') renderMovies(); else if (t === 'radio') renderRadio(); else if (channels.length) applyFilter();
 }
 $('tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b && b.dataset.tab !== tab) setTab(b.dataset.tab); };
 $('movChips').onclick = e => { const b = e.target.closest('.chip'); if (b) { [movKind, movSubject] = MOVCH[+b.dataset.i]; renderMovies(); } };
@@ -772,6 +861,107 @@ const endHold2 = () => { clearTimeout(holdT2); if (hold2) { v.playbackRate = pre
 ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => v.addEventListener(t, endHold2));
 v.addEventListener('contextmenu', e => { if (mode === 'watch') e.preventDefault(); });
 
+// ---- Home extras: favorites, hero, picks, radio, accent colors, shortcuts ----
+let fav = new Set(getObj('jbFav', [])), favOnly = false;
+function toggleFav(c, btn) {
+  if (!c) return;
+  if (fav.has(c.url)) { fav.delete(c.url); toast('Removed from Favorites'); } else { fav.add(c.url); toast('Added to Favorites'); }
+  setObj('jbFav', [...fav]);
+  document.querySelectorAll(`[data-fav="${c.id}"]`).forEach(b => b.classList.toggle('saved', fav.has(c.url)));
+  if (favOnly) applyFilter();
+}
+function countUp(el, n) {
+  const t0 = performance.now();
+  const step = now => { const k = Math.min(1, (now - t0) / 900); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))).toLocaleString(); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function buildHome() {
+  countUp($('stCh'), channels.length); countUp($('stCat'), new Set(channels.flatMap(c => c.cats)).size);
+  let seed = Math.floor(Date.now() / 864e5) || 1; // same picks all day
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const pool = channels.filter(c => c.logo && !bad.has(c.url));
+  for (let i = pool.length - 1; i > 0 && i > pool.length - 40; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const picks = pool.slice(-14);
+  $('picks').innerHTML = picks.map((c, i) => `<div class="shrink-0 w-44 sm:w-56">${card(c, i)}</div>`).join('');
+  $('picksWrap').classList.toggle('hidden', !picks.length || !$('hero').offsetParent);
+}
+$('heroRnd').onclick = () => { const pool = channels.filter(c => !bad.has(c.url)); if (pool.length) openWatch(pool[Math.floor(Math.random() * pool.length)]); };
+$('heroMov').onclick = () => setTab('mov'); $('heroRadio').onclick = () => setTab('radio');
+$('picks').onclick = e => clickCard(e);
+$('movRnd').onclick = async () => {
+  try {
+    const kind = movKind === 'saved' || movKind === 'recent' ? 'discover' : movKind;
+    const res = await iaSearch('', movSubject, 1 + Math.floor(Math.random() * 20), movMat, KIND_COLL[kind] || MAIN, 'downloads desc', movLang);
+    const d = res.docs[Math.floor(Math.random() * res.docs.length)];
+    if (!d) return toast('Nothing found, try again');
+    if (isHigh(d.subject, one(d.title)) && !(await ageGate(one(d.title)))) return;
+    openMovie(d.identifier, one(d.title));
+  } catch (e) { toast('Could not pick a movie right now'); }
+};
+
+// ---- Radio (community Radio Browser directory) ----
+const RB = ['https://de1.api.radio-browser.info', 'https://nl1.api.radio-browser.info', 'https://at1.api.radio-browser.info'];
+const RADIO_TAGS = ['Top', 'Pop', 'Rock', 'News', 'Talk', 'Jazz', 'Classical', 'Hip hop', 'Electronic', 'Country', 'Bollywood', 'Reggae', 'Lounge', 'Kids'];
+let radioTag = '', radioList = [], radioTok = 0, radioNow = -1;
+const ra = new Audio(); ra.preload = 'none';
+async function rbFetch(path) { for (const b of RB) { try { const x = await fetch(b + path); if (x.ok) return await x.json(); } catch (e) {} } throw new Error('directory unreachable'); }
+const radioCard = (x, i) => `<button data-r="${i}" class="mv text-left flex items-center gap-3 rounded-xl t-card p-3 hover:-translate-y-0.5 hover:shadow-lg transition ${radioNow === i ? 'ring-2' : ''}" style="animation-delay:${Math.min(i, 20) * 25}ms">
+  <span class="w-12 h-12 shrink-0 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold overflow-hidden relative">${esc(((x.name || '?').trim()[0] || '?').toUpperCase())}${x.favicon && /^https:/i.test(x.favicon) ? `<img src="${esc(x.favicon)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover bg-white">` : ''}</span>
+  <span class="min-w-0"><span class="block font-medium truncate">${esc((x.name || 'Station').trim())}</span><span class="block text-xs t-muted truncate">${esc([x.countrycode, (x.tags || '').split(',').slice(0, 2).filter(Boolean).join(', '), x.bitrate ? x.bitrate + ' kbps' : ''].filter(Boolean).join(' · '))}</span></span></button>`;
+async function renderRadio() {
+  const tok = ++radioTok, g = $('radioGrid'), st = $('radioStatus');
+  $('radioChips').innerHTML = RADIO_TAGS.map(n => { const tg = n === 'Top' ? '' : n.toLowerCase(); return `<button class="chip ${tg === radioTag ? 'on' : ''}" data-t="${tg}">${n}</button>`; }).join('');
+  g.innerHTML = SKEL.repeat(8); st.textContent = '';
+  const p = new URLSearchParams({ limit: '80', hidebroken: 'true', order: 'clickcount', reverse: 'true' });
+  const q = $('q').value.trim(); if (q) p.set('name', q); if (radioTag) p.set('tag', radioTag);
+  try {
+    let list = await rbFetch('/json/stations/search?' + p);
+    if (tok !== radioTok) return;
+    if (location.protocol === 'https:') list = list.filter(x => /^https:/i.test(x.url_resolved || x.url || ''));
+    radioList = list; g.innerHTML = list.map(radioCard).join('');
+    st.textContent = list.length ? `${list.length} stations` : 'No stations found. Try another search.';
+  } catch (e) { if (tok === radioTok) { g.innerHTML = ''; st.innerHTML = 'Could not reach the radio directory. <button id="radioRetry" class="underline">Retry</button>'; } }
+}
+function playRadio(i) {
+  const x = radioList[i]; if (!x) return;
+  radioNow = i; v.pause();
+  ra.src = x.url_resolved || x.url; ra.play().catch(() => toast('This station could not be played'));
+  $('rbName').textContent = (x.name || 'Station').trim();
+  $('rbMeta').textContent = [x.countrycode, (x.tags || '').split(',').slice(0, 2).filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+  $('radioBar').classList.remove('hidden'); re($('radioBar'), 'enter'); document.body.style.paddingBottom = '4.5rem';
+  document.querySelectorAll('#radioGrid [data-r]').forEach(b => b.classList.toggle('ring-2', +b.dataset.r === i));
+  if (x.stationuuid) rbFetch('/json/url/' + x.stationuuid).catch(() => {}); // counts a listen for the directory
+  if ('mediaSession' in navigator && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: x.name || 'Station', artist: 'JB TV Radio' });
+}
+ra.onplay = ra.onpause = () => setIcon($('rbPlay'), ra.paused ? 'play' : 'pause');
+ra.onerror = () => { if (ra.getAttribute('src')) toast('This station is unavailable right now'); };
+$('rbPlay').onclick = () => ra.paused ? ra.play().catch(() => {}) : ra.pause();
+$('rbClose').onclick = () => { ra.pause(); ra.removeAttribute('src'); ra.load(); $('radioBar').classList.add('hidden'); document.body.style.paddingBottom = ''; radioNow = -1; document.querySelectorAll('#radioGrid .ring-2').forEach(b => b.classList.remove('ring-2')); };
+$('rbVol').oninput = e => { ra.volume = +e.target.value; };
+$('radioGrid').onclick = e => { const b = e.target.closest('[data-r]'); if (b) playRadio(+b.dataset.r); };
+$('radioChips').onclick = e => { const b = e.target.closest('.chip'); if (b) { radioTag = b.dataset.t; renderRadio(); } };
+$('radioStatus').onclick = e => { if (e.target.id === 'radioRetry') renderRadio(); };
+v.addEventListener('playing', () => { if (!ra.paused) ra.pause(); }); // video and radio never overlap
+setIcon($('rbPlay'), 'play');
+
+// ---- Accent color, shortcuts help, scroll progress, tab hidden ----
+function setAccent(c) {
+  document.documentElement.style.setProperty('--accent', c); setObj('jbAccent', c);
+  document.querySelectorAll('#accents [data-a]').forEach(b => b.classList.toggle('on', b.dataset.a === c));
+}
+$('accents').onclick = e => { const b = e.target.closest('[data-a]'); if (b) setAccent(b.dataset.a); };
+setAccent(getObj('jbAccent', '#dc2626'));
+const keysOpen = () => !$('keys').classList.contains('hidden');
+function toggleKeys(on) { $('keys').classList.toggle('hidden', !on); if (on) re($('keysCard'), 'pop'); }
+$('keysLink').onclick = () => toggleKeys(true); $('keysClose').onclick = () => toggleKeys(false);
+$('keys').onclick = e => { if (e.target.id === 'keys') toggleKeys(false); };
+document.addEventListener('keydown', e => {
+  if (e.key === '?' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); toggleKeys(!keysOpen()); }
+  else if (e.key === 'Escape' && keysOpen()) { toggleKeys(false); e.stopImmediatePropagation(); }
+});
+addEventListener('scroll', () => { const h = document.documentElement; $('progress').style.width = scrollY / Math.max(1, h.scrollHeight - innerHeight) * 100 + '%'; }, { passive: true });
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopPreview(); });
+
 // ---- Toast ----
 let toastT;
 function toast(msg, undo) {
@@ -790,7 +980,7 @@ function addRecent(c) {
   saveRecent(); renderRecent();
 }
 const rcard = (x, i) => `<article data-r="${i}" class="rc group relative shrink-0 w-40 sm:w-52 cursor-pointer" style="animation-delay:${Math.min(i, 8) * 40}ms">
-  <div class="thumb relative aspect-video rounded-xl t-card flex items-center justify-center overflow-hidden"><span class="text-2xl font-bold text-gray-600">${esc(x.name.trim().slice(0, 2).toUpperCase())}</span>${x.logo ? `<img src="${esc(x.logo)}" loading="lazy" referrerpolicy="no-referrer" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-contain p-3">` : ''}</div>
+  <div class="thumb relative aspect-video rounded-xl t-card flex items-center justify-center overflow-hidden"><span class="text-2xl font-bold text-gray-600">${esc(x.name.trim().slice(0, 2).toUpperCase())}</span>${x.logo ? `<img src="${esc(x.logo)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-contain p-3">` : ''}</div>
   <button data-del="${i}" class="del absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-600" title="Remove from recent">${ic('close', 14)}</button>
   <h3 class="mt-2 text-sm font-medium line2">${esc(x.name)}</h3></article>`;
 function renderRecent() {
@@ -815,10 +1005,14 @@ $('recentClear').onclick = () => {
 function buildChips() {
   const n = {}; channels.forEach(c => c.cats.forEach(k => n[k] = (n[k] || 0) + 1));
   const top = Object.keys(n).filter(k => k !== 'Undefined' && k !== 'Uncategorized').sort((a, b) => n[b] - n[a]).slice(0, 16);
-  $('chips').innerHTML = ['', ...top].map(k => `<button class="chip" data-c="${esc(k)}">${k ? esc(k) : 'All'}</button>`).join('');
+  $('chips').innerHTML = '<button class="chip" data-fav="1">★ Favorites</button>' + ['', ...top].map(k => `<button class="chip" data-c="${esc(k)}">${k ? esc(k) : 'All'}</button>`).join('');
 }
-function syncChips() { document.querySelectorAll('#chips .chip').forEach(b => b.classList.toggle('on', b.dataset.c === $('cat').value)); }
-$('chips').onclick = e => { const b = e.target.closest('.chip'); if (b) { $('cat').value = b.dataset.c; applyFilter(); } };
+function syncChips() { document.querySelectorAll('#chips .chip').forEach(b => b.classList.toggle('on', b.dataset.fav ? favOnly : !favOnly && b.dataset.c === $('cat').value)); }
+$('chips').onclick = e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  if (b.dataset.fav) favOnly = !favOnly; else { favOnly = false; $('cat').value = b.dataset.c; }
+  applyFilter();
+};
 $('rndBtn').onclick = () => { if (!filtered.length) return toast('No channels in this list'); openWatch(filtered[Math.floor(Math.random() * filtered.length)]); };
 $('toTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 addEventListener('scroll', () => {
@@ -836,7 +1030,8 @@ function card(c, i = 0) {
   return `<article data-id="${c.id}" class="cursor-pointer group" style="animation-delay:${Math.min(i, 24) * 30}ms">
     <div class="relative aspect-video rounded-xl t-card flex items-center justify-center overflow-hidden thumb">
       <span class="text-3xl font-bold text-gray-600">${ini}</span>
-      ${c.logo ? `<img src="${esc(c.logo)}" loading="lazy" referrerpolicy="no-referrer" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-contain p-4 t-card transition-transform duration-300 group-hover:scale-110">` : ''}
+      ${c.logo ? `<img src="${esc(c.logo)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="this.classList.add('ld')" onerror="this.remove()" class="absolute inset-0 w-full h-full object-contain p-4 t-card transition-transform duration-300 group-hover:scale-110">` : ''}
+      <button data-fav="${c.id}" class="heart fv absolute top-1.5 right-1.5 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-600 ${fav.has(c.url) ? 'saved' : ''}" title="Favorite">${ic('heart', 16)}</button>
       <span class="absolute bottom-1 right-1 z-10 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"><i class="dot"></i>LIVE</span>
     </div>
     <h3 class="mt-2 text-sm font-medium line2">${esc(c.name)}</h3>
@@ -848,11 +1043,11 @@ function filterQuery() { // ?q= ?cat= ?lang= for the current controls
   const qs = p.toString(); return qs ? '?' + qs : '';
 }
 function syncUrl() { // keep the address bar in step with the controls so a filtered view can be shared
-  if (mode === 'watch' || tab === 'mov') return;
+  if (mode === 'watch' || tab !== 'tv') return;
   try { history.replaceState(history.state, '', location.pathname + filterQuery()); } catch (e) {}
 }
 function resetFilters() { // clear search + category + language and show every channel again
-  $('q').value = ''; $('cat').value = ''; $('lang').value = ''; qStore.tv = '';
+  $('q').value = ''; $('cat').value = ''; $('lang').value = ''; qStore.tv = ''; favOnly = false;
   clearTimeout(t); applyFilter(); window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function applyUrlState() { // make the controls (and the grid) follow the address bar after Back / Forward
@@ -866,10 +1061,10 @@ function applyUrlState() { // make the controls (and the grid) follow the addres
 }
 function applyFilter() {
   const q = $('q').value.trim().toLowerCase(), cat = $('cat').value, lang = $('lang').value;
-  filtered = channels.filter(c => (!hideBad || !bad.has(c.url)) && (!cat || c.cats.includes(cat)) && (!lang || c.langs.includes(lang)) && (!q || c.name.toLowerCase().includes(q)));
+  filtered = channels.filter(c => (!hideBad || !bad.has(c.url)) && (!favOnly || fav.has(c.url)) && (!cat || c.cats.includes(cat)) && (!lang || c.langs.includes(lang)) && (!q || c.name.toLowerCase().includes(q)));
   stopPreview(); $('grid').innerHTML = ''; shown = 0;
   syncUrl(); refreshBar();
-  if (!filtered.length) $('grid').innerHTML = '<div class="col-span-full text-center t-muted py-16">No channels match. <button id="noRes" class="underline hover:text-red-500">Clear filters</button></div>';
+  if (!filtered.length) $('grid').innerHTML = '<div class="col-span-full text-center t-muted py-16">' + (favOnly && !fav.size ? 'No favorites yet. Tap the heart on any channel.' : 'No channels match.') + ' <button id="noRes" class="underline hover:text-red-500">Clear filters</button></div>';
   more();
 }
 function more() {
@@ -879,7 +1074,7 @@ function more() {
 }
 let t;
 const stopQueued = () => clearTimeout(t);
-const runSearch = () => { clearTimeout(t); tab === 'mov' ? searchMovies() : applyFilter(); };
+const runSearch = () => { clearTimeout(t); tab === 'mov' ? searchMovies() : tab === 'radio' ? renderRadio() : applyFilter(); };
 const queueFilter = () => { clearTimeout(t); t = setTimeout(runSearch, 250); };
 $('q').oninput = queueFilter;
 $('q').addEventListener('search', queueFilter); // the clear (x) button in Safari / iOS fires "search"
@@ -890,7 +1085,7 @@ $('q').addEventListener('keydown', e => {
 });
 $('cat').onchange = $('lang').onchange = applyFilter;
 $('more').onclick = more;
-const clickCard = e => { if (e.target.closest('#noRes')) return resetFilters(); if (held) return; const a = e.target.closest('article'); if (a) openWatch(channels[+a.dataset.id]); };
+const clickCard = e => { if (e.target.closest('#noRes')) return resetFilters(); const fb = e.target.closest('[data-fav]'); if (fb) return toggleFav(channels[+fb.dataset.fav], fb); if (held) return; const a = e.target.closest('article'); if (a) openWatch(channels[+a.dataset.id]); };
 $('grid').oncontextmenu = e => { if (matchMedia('(pointer: coarse)').matches && e.target.closest('article')) e.preventDefault(); };
 $('grid').onclick = clickCard; $('related').onclick = clickCard;
 
@@ -899,6 +1094,7 @@ let pv = null, hoverArt = null, hoverT = 0, holdT = 0, held = false;
 function stopPreview() { if (!pv) return; if (pv.hls) pv.hls.destroy(); pv.box.remove(); pv = null; }
 function startPreview(art) {
   stopPreview();
+  const nc = navigator.connection; if (nc && (nc.saveData || /2g/.test(nc.effectiveType))) return; // save data
   const c = channels[+art.dataset.id]; if (!c || !art.isConnected) return;
   const box = document.createElement('div');
   box.className = 'pv absolute inset-0 z-[5] bg-black flex items-center justify-center';
@@ -914,7 +1110,7 @@ function startPreview(art) {
     h.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) stopPreview(); });
   } else if (el.canPlayType('application/vnd.apple.mpegurl')) { el.src = src; el.play().catch(() => {}); }
 }
-const CARD = '#grid article, #related article';
+const CARD = '#grid article, #related article, #picks article';
 document.addEventListener('pointerover', e => {
   if (e.pointerType !== 'mouse') return;
   const a = e.target.closest(CARD);
@@ -1235,7 +1431,7 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEven
 
 buildMovChips(); syncMat();
 const P0 = new URLSearchParams(location.search);
-if (P0.get('tab') === 'movies' || P0.get('m')) setTab('mov');
+if (P0.get('tab') === 'radio') setTab('radio'); else if (P0.get('tab') === 'movies' || P0.get('m')) setTab('mov');
 if (P0.get('m')) openMovie(P0.get('m'));
 renderRecent();
 load();
