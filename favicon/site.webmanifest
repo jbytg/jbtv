@@ -1,21 +1,58 @@
 {
-  "name": "JB Free TV",
-  "short_name": "TV",
+  "id": "/",
+  "name": "JB TV – Watch Live TV Channels Online Free",
+  "short_name": "JB TV",
+  "description": "Watch live TV channels, explore movies and TV, and listen to internet radio with JB TV.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "theme_color": "#0f0f0f",
+  "background_color": "#0f0f0f",
+  "categories": [
+    "entertainment",
+    "video",
+    "music"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon/web-app-manifest-192x192.png?v=1",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     },
     {
       "src": "/favicon/web-app-manifest-512x512.png?v=1",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ],
-  "theme_color": "#d61a1a",
-  "background_color": "#331ad7",
-  "display": "standalone"
+  "shortcuts": [
+    {
+      "name": "Live TV",
+      "short_name": "Live TV",
+      "description": "Browse and watch live TV channels.",
+      "url": "/"
+    },
+    {
+      "name": "Movies & TV",
+      "short_name": "Movies",
+      "description": "Explore movies and television.",
+      "url": "/?tab=movies"
+    },
+    {
+      "name": "Radio",
+      "short_name": "Radio",
+      "description": "Listen to internet radio stations.",
+      "url": "/?tab=radio"
+    }
+  ]
 }
