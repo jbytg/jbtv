@@ -528,7 +528,7 @@ try {
   if (PROXY && localStorage.getItem('jbProxyUrl') !== PROXY) { proxyMode = 'worker'; localStorage.setItem('jbProxy', 'worker'); localStorage.setItem('jbProxyUrl', PROXY); }
 } catch (e) {}
 const proxyList = () => proxyMode === 'off' ? [] : proxyMode === 'public' ? PUBLIC_PROXIES
-  : [{ name: 'Your proxy', wrap: u => u.startsWith(PROXY) ? u : PROXY + encodeURIComponent(u) }];
+  : [{ name: 'Your proxy', wrap: u => u.startsWith(PROXY) ? u : PROXY + encodeURIComponent(u), ping: PROXY.replace(/\?url=$/, '?ping=1') }];
 function syncProxyUi() {
   const b = $('proxyBtn'); b.textContent = 'Proxy: ' + PLABEL[proxyMode];
   b.classList.toggle('!bg-red-600', proxyMode !== 'off'); b.classList.toggle('!text-white', proxyMode !== 'off');
@@ -539,7 +539,7 @@ function cycleProxy() {
   setProxy(modes[(modes.indexOf(proxyMode) + 1) % modes.length]); toast('Proxy: ' + PLABEL[proxyMode]);
 }
 async function proxyHealthy(p) { // fetch a tiny known page through the proxy
-  try { const x = await fetch(p.wrap('https://example.com/'), { cache: 'no-store' }); return x.ok && (await x.text()).includes('Example Domain'); }
+  try { const x = await fetch(p.ping || p.wrap('https://example.com/'), { cache: 'no-store' }); const tx = await x.text(); return x.ok && (tx.includes('Example Domain') || tx.includes('jb-proxy-ok')); }
   catch (e) { return false; }
 }
 $('proxyBtn').onclick = cycleProxy;
@@ -549,9 +549,17 @@ async function testProxy() { // tells you exactly where the proxy setup is faili
   if (proxyMode === 'worker' && !PROXY) return alert('The PROXY address in index.html is empty. Paste your Cloudflare Worker address there first.');
   const px = list[0], out = ['Mode: ' + PLABEL[proxyMode]];
   try {
-    const r1 = await fetch(px.wrap('https://example.com/'), { cache: 'no-store' }), t1 = r1.ok ? await r1.text() : '';
-    if (r1.ok && t1.includes('Example Domain')) out.push('OK: the proxy reaches the internet.');
-    else { out.push(`FAIL: the proxy answered ${r1.status}.` + (r1.status === 403 ? ' Your site address is not in the ALLOWED list of the worker.' : '')); return alert(out.join('\n')); }
+    const r1 = await fetch(px.ping || px.wrap('https://example.com/'), { cache: 'no-store' }), t1 = await r1.text();
+    if (r1.ok && (t1.includes('Example Domain') || t1.includes('jb-proxy-ok'))) out.push('OK: the proxy reaches the internet.');
+    else {
+      const say = t1.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+      let why = '';
+      if (r1.status === 403) why = ' Your site address is not in the ALLOWED list of the worker, or the worker is not the latest version.';
+      else if (r1.status === 404 || r1.status === 530 || /1042|nothing here/i.test(t1)) why = ' No worker answers at that address. Check the address after PROXY, and that the worker is deployed with its workers.dev route enabled.';
+      else if (r1.ok) why = ' The address answers, but it is not running the proxy code. Paste cors-proxy-worker.js into the worker and press Deploy.';
+      out.push(`FAIL: the proxy answered ${r1.status}.${why}` + (say ? `\nIt said: "${say}"` : ''));
+      return alert(out.join('\n'));
+    }
   } catch (e) { return alert(out.concat('FAIL: could not reach the proxy. Check the address after PROXY (it must end with /?url=), that the worker is deployed, and that you uploaded the new index.html.').join('\n')); }
   try {
     const r2 = await fetch(px.wrap('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'), { cache: 'no-store' }), t2 = await r2.text();
