@@ -15,7 +15,7 @@
 <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg?v=1" />
 <link rel="shortcut icon" href="/favicon/favicon.ico?v=1" />
 <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png?v=1" />
-<link rel="manifest" href="/favicon/site.webmanifest?v=2" />
+<link rel="manifest" href="/favicon/site.webmanifest?v=3" />
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JB TV">
@@ -78,6 +78,7 @@
   #grid article,#movGrid article{content-visibility:auto;contain-intrinsic-size:auto 200px}
   #accents button{width:1.5rem;height:1.5rem;border-radius:9999px;transition:transform .15s}
   #accents button:hover{transform:scale(1.15)}#accents button.on{outline:2px solid var(--fg);outline-offset:2px}
+  .native #proxyBtn,.native #proxyTest,.native #scanBtn,.native #extBtn{display:none!important}
   .btn.hidden{display:none}
   @media (max-width:767px){ /* movies on phones: controls sit below the video. Live TV keeps the overlay controls. */
     #stage.movie:not(:fullscreen):not(.mini) #ctl{position:static;background:#0c0c0c;opacity:1!important;transform:none!important;pointer-events:auto!important}
@@ -227,7 +228,7 @@
   <div class="max-w-6xl mx-auto p-2 sm:p-4">
     <button id="back" class="btn mb-3" data-ic="back">Back</button>
     <div id="watchSlot" class="bg-black rounded-xl overflow-hidden"></div>
-    <div class="flex items-start justify-between gap-3 mt-3"><h2 id="wTitle" class="text-lg sm:text-xl font-semibold"></h2><div class="flex gap-2 shrink-0"><button id="saveBtn" class="btn hidden" title="Save movie"></button><button id="shareBtn" class="btn" title="Share" data-ic="share">Share</button></div></div>
+    <div class="flex items-start justify-between gap-3 mt-3"><h2 id="wTitle" class="text-lg sm:text-xl font-semibold"></h2><div class="flex gap-2 shrink-0"><button id="extBtn" class="btn hidden" title="Open this stream in VLC or another video player app" data-ic="external">Player</button><button id="saveBtn" class="btn hidden" title="Save movie"></button><button id="shareBtn" class="btn" title="Share" data-ic="share">Share</button></div></div>
     <p id="wMeta" class="text-sm t-muted"></p>
     <p id="wDesc" class="text-sm t-muted mt-3 max-w-3xl whitespace-pre-line"></p>
     <div id="eps" class="hidden mt-5 max-w-3xl">
@@ -522,10 +523,10 @@ const PUBLIC_PROXIES = [ // free third-party proxies: can be slow, rate-limited 
   { name: 'CodeTabs', wrap: u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u) }
 ];
 const PLABEL = { off: 'Off', public: 'Public', worker: 'Your proxy' };
-let proxyMode = PROXY ? 'worker' : 'public';
+let proxyMode = 'off'; // the proxy is Off by default. Turn it on with the Proxy button.
 try {
+  if (localStorage.getItem('jbProxyDefault') !== 'off1') { localStorage.setItem('jbProxy', 'off'); localStorage.setItem('jbProxyDefault', 'off1'); } // one-time reset to Off
   const m = localStorage.getItem('jbProxy'); if (m === 'off' || m === 'public' || (m === 'worker' && PROXY)) proxyMode = m;
-  if (PROXY && localStorage.getItem('jbProxyUrl') !== PROXY) { proxyMode = 'worker'; localStorage.setItem('jbProxy', 'worker'); localStorage.setItem('jbProxyUrl', PROXY); }
 } catch (e) {}
 const proxyList = () => proxyMode === 'off' ? [] : proxyMode === 'public' ? PUBLIC_PROXIES
   : [{ name: 'Your proxy', wrap: u => u.startsWith(PROXY) ? u : PROXY + encodeURIComponent(u), ping: PROXY.replace(/\?url=$/, '?ping=1') }];
@@ -778,7 +779,7 @@ async function openMovie(id, title = '', file = '') {
   const link = '?m=' + encodeURIComponent(id);
   try { if (mode !== 'watch') history.pushState({ w: 1 }, '', link); else history.replaceState(history.state, '', link); } catch (e) {}
   $('wTitle').textContent = title; $('wMeta').textContent = ''; $('wDesc').textContent = ''; $('related').innerHTML = ''; $('eps').classList.add('hidden');
-  $('relH').classList.add('hidden'); $('saveBtn').classList.remove('hidden'); updateSaveBtn();
+  $('relH').classList.add('hidden'); $('saveBtn').classList.remove('hidden'); $('extBtn').classList.add('hidden'); updateSaveBtn();
   setMode('watch'); $('watch').scrollTop = 0; v.playbackRate = 1; syncMovieUi();
   try {
     const r = await fetch(`${IA}/metadata/${encodeURIComponent(id)}`);
@@ -970,6 +971,23 @@ document.addEventListener('keydown', e => {
 addEventListener('scroll', () => { const h = document.documentElement; $('progress').style.width = scrollY / Math.max(1, h.scrollHeight - innerHeight) * 100 + '%'; }, { passive: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden) stopPreview(); });
 
+// ---- Open a stream in a native player (VLC, MX Player ...): no CORS limit there ----
+if (window.JBNative) document.documentElement.classList.add('native');
+async function copyStream(c) {
+  try { await navigator.clipboard.writeText(c.url); toast('Stream link copied. In VLC: Media → Open Network Stream.'); }
+  catch (e) { prompt('Copy this stream link', c.url); }
+}
+function openExternal(c) {
+  if (!c || c.isMovie) return;
+  let u; try { u = new URL(c.url); } catch (e) { return toast('Bad stream address'); }
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) { // Android shows the list of installed video players
+    location.href = `intent://${u.host}${u.pathname}${u.search}#Intent;action=android.intent.action.VIEW;scheme=${u.protocol.slice(0, -1)};type=video/*;S.title=${encodeURIComponent(c.name)};end`;
+  } else if (/iPhone|iPad|iPod/i.test(ua)) location.href = 'vlc-x-callback://x-callback-url/stream?url=' + encodeURIComponent(c.url);
+  else copyStream(c);
+}
+$('extBtn').onclick = () => openExternal(cur);
+
 // ---- Toast ----
 let toastT;
 function toast(msg, undo) {
@@ -1103,6 +1121,7 @@ function stopPreview() { if (!pv) return; if (pv.hls) pv.hls.destroy(); pv.box.r
 function startPreview(art) {
   stopPreview();
   const nc = navigator.connection; if (nc && (nc.saveData || /2g/.test(nc.effectiveType))) return; // save data
+  if (window.JBNative) return;
   const c = channels[+art.dataset.id]; if (!c || !art.isConnected) return;
   const box = document.createElement('div');
   box.className = 'pv absolute inset-0 z-[5] bg-black flex items-center justify-center';
@@ -1190,12 +1209,14 @@ async function giveUp(c, d, n, msg) {
 function fail(m) {
   spin(false);
   const live = !(cur && cur.isMovie);
-  $('err').innerHTML = `<div class="max-w-sm"><p>${m}</p><div class="flex flex-wrap gap-2 justify-center mt-3"><button id="retry" class="btn !text-white">Retry</button>${live ? `<button id="proxyErr" class="btn !text-white">Proxy: ${PLABEL[proxyMode]}</button><button id="hideCh" class="btn !text-white">Hide channel</button>` : ''}</div></div>`;
+  $('err').innerHTML = `<div class="max-w-sm"><p>${m}</p><div class="flex flex-wrap gap-2 justify-center mt-3"><button id="retry" class="btn !text-white">Retry</button>${live ? `<button id="proxyErr" class="btn !text-white">Proxy: ${PLABEL[proxyMode]}</button><button id="extErr" class="btn !text-white">Open in player</button><button id="copyErr" class="btn !text-white">Copy link</button><button id="hideCh" class="btn !text-white">Hide channel</button>` : ''}</div></div>`;
   $('err').classList.remove('hidden');
 }
 $('err').onclick = e => {
   if (e.target.closest('#retry') && cur) { if (cur.isMovie) openMovie(cur.mid, cur.name); else startStream(cur); }
   if (e.target.closest('#proxyErr') && cur) { cycleProxy(); startStream(cur); }
+  if (e.target.closest('#extErr') && cur) openExternal(cur);
+  if (e.target.closest('#copyErr') && cur) copyStream(cur);
   if (e.target.closest('#hideCh') && cur) { bad.add(cur.url); saveSets(); closePlayer(); if (history.state && history.state.w) history.back(); applyFilter(); }
 };
 
@@ -1213,7 +1234,8 @@ function setMode(m) {
 }
 const chId = c => c.tvg || 'h' + [...c.url].reduce((h, ch) => (h * 33 + ch.charCodeAt(0)) >>> 0, 5381).toString(36);
 function openWatch(c) {
-  stopPreview(); $('eps').classList.add('hidden'); $('saveBtn').classList.add('hidden'); $('relH').classList.remove('hidden'); $('wDesc').textContent = '';
+  if (window.JBNative && typeof JBNative.play === 'function') { stopPreview(); addRecent(c); try { JBNative.play(c.url, c.name || ''); } catch (e) {} return; } // Android app: play with the phone's own player
+  stopPreview(); $('eps').classList.add('hidden'); $('saveBtn').classList.add('hidden'); $('extBtn').classList.remove('hidden'); $('relH').classList.remove('hidden'); $('wDesc').textContent = '';
   if (mode === 'none' || cur !== c) startStream(c);
   const link = '?c=' + encodeURIComponent(chId(c));
   try { if (mode !== 'watch') history.pushState({ w: 1 }, '', link); else history.replaceState(history.state, '', link); } catch (e) {}
