@@ -270,6 +270,7 @@
 </div>
 <div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-full bg-[#272727] text-white text-sm pl-4 pr-2 py-2 shadow-2xl ring-1 ring-white/10"><span id="toastTxt"></span><button id="toastAct" class="btn !py-1 !px-3 text-xs !bg-white/15 hidden">Undo</button></div>
 <button id="toTop" class="btn hidden fixed bottom-4 left-4 z-40 !p-3 shadow-lg ring-1 ring-white/10" title="Back to top" data-ic="up"></button>
+<button id="toBottom" class="btn hidden fixed bottom-4 left-16 z-40 !p-3 shadow-lg ring-1 ring-white/10" title="Jump to the bottom" data-ic="down"></button>
 <div id="radioBar" class="hidden fixed bottom-0 inset-x-0 z-[45] t-bg2 backdrop-blur border-t t-bord px-3 py-2 flex items-center gap-3">
   <span class="w-10 h-10 rounded-lg bg-red-600 text-white flex items-center justify-center shrink-0" data-ic="radio"></span>
   <div class="min-w-0 flex-1"><p id="rbName" class="font-medium truncate text-sm"></p><p id="rbMeta" class="text-xs t-muted truncate"></p></div>
@@ -378,6 +379,7 @@ const P = {
   heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
   shuffle:'<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
   up:'<path d="m18 15-6-6-6 6"/>',
+  down:'<path d="m6 9 6 6 6-6"/>',
   aspect:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h3M7 9v3M17 15h-3M17 15v-3"/>',
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   check:'<path d="M20 6 9 17l-5-5"/>'
@@ -671,7 +673,7 @@ $('tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b && b.
 $('movChips').onclick = e => { const b = e.target.closest('.chip'); if (b) { [movKind, movSubject] = MOVCH[+b.dataset.i]; renderMovies(); } };
 $('movMore').onclick = () => { movPage++; renderMovies(true); };
 let lastMore = 0;
-new IntersectionObserver(es => { if (es[0].isIntersecting && tab === 'mov' && Date.now() - lastMore > 1500) { lastMore = Date.now(); $('movMore').click(); } }, { rootMargin: '600px' }).observe($('movMore'));
+new IntersectionObserver(es => { if (es[0].isIntersecting && tab === 'mov' && movPage < 3 && Date.now() - lastMore > 1500) { lastMore = Date.now(); $('movMore').click(); } }, { rootMargin: '600px' }).observe($('movMore'));
 $('movStatus').onclick = e => { if (e.target.id === 'movRetry') renderMovies(); };
 function toggleSave(id, title) {
   if (isSaved(id)) { movSaved = movSaved.filter(x => x.id !== id); toast('Removed from Saved'); }
@@ -1043,6 +1045,12 @@ $('chips').onclick = e => {
 };
 $('rndBtn').onclick = () => { if (!filtered.length) return toast('No channels in this list'); openWatch(filtered[Math.floor(Math.random() * filtered.length)]); };
 $('toTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+$('toBottom').onclick = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+addEventListener('scroll', () => {
+  const h = document.documentElement, show = scrollY > 300 && h.scrollHeight - innerHeight - scrollY > 500 && mode !== 'watch', el = $('toBottom');
+  if (show === !el.classList.contains('hidden')) return;
+  el.classList.toggle('hidden', !show); if (show) re(el, 'pop');
+}, { passive: true });
 addEventListener('scroll', () => {
   const show = scrollY > 700 && mode !== 'watch', el = $('toTop');
   if (show === !el.classList.contains('hidden')) return;
@@ -1095,10 +1103,12 @@ function applyFilter() {
   if (!filtered.length) $('grid').innerHTML = '<div class="col-span-full text-center t-muted py-16">' + (favOnly && !fav.size ? 'No favorites yet. Tap the heart on any channel.' : 'No channels match.') + ' <button id="noRes" class="underline hover:text-red-500">Clear filters</button></div>';
   more();
 }
-function more() {
-  $('grid').insertAdjacentHTML('beforeend', filtered.slice(shown, shown + PAGE).map(card).join(''));
-  shown = Math.min(shown + PAGE, filtered.length);
+const AUTO_MAX = 240; // channels that load by themselves while scrolling; after that, use the button
+function more(n = PAGE) {
+  $('grid').insertAdjacentHTML('beforeend', filtered.slice(shown, shown + n).map(card).join(''));
+  shown = Math.min(shown + n, filtered.length);
   $('more').classList.toggle('hidden', shown >= filtered.length);
+  $('more').textContent = `Load more (${(filtered.length - shown).toLocaleString()} left)`;
 }
 let t;
 const stopQueued = () => clearTimeout(t);
@@ -1112,7 +1122,7 @@ $('q').addEventListener('keydown', e => {
   else if (e.key === 'Escape' && $('q').value) { e.stopPropagation(); $('q').value = ''; runSearch(); }
 });
 $('cat').onchange = $('lang').onchange = applyFilter;
-$('more').onclick = more;
+$('more').onclick = () => more(120);
 const clickCard = e => { if (e.target.closest('#noRes')) return resetFilters(); const fb = e.target.closest('[data-fav]'); if (fb) return toggleFav(channels[+fb.dataset.fav], fb); if (held) return; const a = e.target.closest('article'); if (a) openWatch(channels[+a.dataset.id]); };
 $('grid').oncontextmenu = e => { if (matchMedia('(pointer: coarse)').matches && e.target.closest('article')) e.preventDefault(); };
 $('grid').onclick = clickCard; $('related').onclick = clickCard;
@@ -1404,7 +1414,7 @@ window.addEventListener('resize', snapMini);
 
 // ---- Infinite scroll ----
 const io = new IntersectionObserver(es => {
-  if (es[0].isIntersecting && shown < filtered.length) { more(); io.unobserve($('sentinel')); io.observe($('sentinel')); }
+  if (es[0].isIntersecting && shown < filtered.length && shown < AUTO_MAX) { more(); io.unobserve($('sentinel')); io.observe($('sentinel')); }
 }, { rootMargin: '600px' });
 io.observe($('sentinel'));
 
