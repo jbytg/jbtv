@@ -93,6 +93,7 @@
   .sp-line{position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:#fff;box-shadow:0 0 16px 2px #fff;z-index:6;pointer-events:none;transform:scaleX(0);animation:spLine .95s cubic-bezier(.7,0,.2,1) forwards}
   @keyframes spLine{0%{transform:scaleX(0);opacity:1}32%,60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
   .sp-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;text-align:center}
+  .sp-tilt{display:flex;justify-content:center}
   .sp-tile{position:relative;width:7.5rem;height:7.5rem;border-radius:1.9rem;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.2);box-shadow:0 20px 44px -12px color-mix(in srgb,var(--accent) 60%,transparent),inset 0 1px 0 rgba(255,255,255,.25);opacity:0;transform:scale(.5);animation:spTile .9s .7s cubic-bezier(.2,1.1,.3,1) forwards}
   @keyframes spTile{to{opacity:1;transform:scale(1)}}
   .sp-tile:before{content:"";position:absolute;inset:-18px;border-radius:2.6rem;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 50%,transparent) 0%,transparent 68%);opacity:0;animation:spPulse 2.6s 1.6s ease-in-out infinite;pointer-events:none}
@@ -121,18 +122,44 @@
   .sp-count{margin-top:.35rem;font-size:.75rem;color:rgba(255,255,255,.5);opacity:0;transition:opacity .6s}
   #splash.go .sp-center{animation:spExit .7s cubic-bezier(.6,0,.9,.4) forwards}
   @keyframes spExit{to{transform:scale(2.4);opacity:0}}
+  @keyframes spFade2{from{opacity:0}to{opacity:1}}
+  @keyframes spExitLite{to{opacity:0}}
+  /* extras that only exist on higher levels are hidden by default */
+  .sp-aurora,.sp-eq,.sp-dots,.sp-flash{display:none}
+  /* ===== Level 4: ULTRA – 60 fps stars, 3D tilt that follows your finger/mouse, drifting aurora, blur-in letters, equalizer, shockwave ===== */
+  .t4 .sp-aurora{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .sp-aurora i{position:absolute;border-radius:50%;will-change:transform}
+  .sp-aurora i:nth-child(1){width:90vmax;height:90vmax;left:-30vmax;top:-45vmax;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 38%,transparent),transparent 62%);animation:spDrift 16s ease-in-out infinite alternate}
+  .sp-aurora i:nth-child(2){width:80vmax;height:80vmax;right:-30vmax;bottom:-40vmax;background:radial-gradient(circle,rgba(59,130,246,.3),transparent 62%);animation:spDrift 20s -6s ease-in-out infinite alternate-reverse}
+  @keyframes spDrift{to{transform:translate3d(8vmax,5vmax,0) scale(1.15)}}
+  .t4 .sp-tilt{will-change:transform}
+  .t4 .sp-title span{filter:blur(10px);animation-name:spLetterB}
+  @keyframes spLetterB{to{opacity:1;transform:none;filter:none}}
+  .t4 .sp-eq{display:flex;align-items:flex-end;gap:4px;height:20px;margin-top:1rem}
+  .sp-eq i{display:block;width:3px;height:100%;border-radius:2px;background:var(--accent);transform-origin:bottom;transform:scaleY(.25);animation:spEq 1.1s ease-in-out infinite}
+  @keyframes spEq{50%{transform:scaleY(1)}}
+  .t4 .sp-flash{display:block;position:absolute;left:50%;top:46%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;opacity:0;pointer-events:none}
+  .t4.go .sp-flash{animation:spFlash .9s ease-out forwards}
+  @keyframes spFlash{0%{transform:scale(1);opacity:.9}100%{transform:scale(130);opacity:0}}
+  /* ===== Level 2: MEDIUM – no canvas, no shutters; a slow CSS star layer, one ring ===== */
+  .t2 .sp-dots{display:block;position:absolute;inset:-20%;opacity:.7;pointer-events:none;background-image:radial-gradient(1.6px 1.6px at 12% 18%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 37% 72%,#fff 50%,transparent 51%),radial-gradient(1.6px 1.6px at 66% 28%,var(--accent) 50%,transparent 51%),radial-gradient(1.2px 1.2px at 84% 81%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 52% 46%,#fff 50%,transparent 51%);background-size:260px 260px;animation:spDots 40s linear infinite}
+  @keyframes spDots{to{transform:translate3d(-260px,-260px,0)}}
+  .t2 .sp-stage{animation:spFade2 .5s both}
+  .t2 .sp-tile{box-shadow:none;animation-delay:.15s}
+  .t2 .sp-title span{animation-delay:calc(var(--i)*.09s + .5s)}
+  .t2 .sp-tag{animation-delay:1s}.t2 .sp-ticker{animation-delay:1.1s}.t2 .sp-bar{animation-delay:.8s}.t2 .sp-status{animation-delay:.9s}
+  .t2.go .sp-center{animation:spExitLite .5s ease-in forwards}
+  /* ===== Level 1: LITE – only a simple fade, logo, title and progress bar ===== */
+  .t1 .sp-stage{background:#07070c;animation:spFade2 .4s both}
+  .t1 .sp-tile{box-shadow:none;animation-delay:.05s}
+  .t1 .sp-title span{animation-delay:calc(var(--i)*.06s + .25s)}
+  .t1 .sp-tag{animation-delay:.6s}.t1 .sp-bar{animation-delay:.4s}.t1 .sp-status{animation-delay:.5s}
+  .t1.go .sp-center{animation:spExitLite .35s ease-in forwards}
+  .t1 .sp-ticker,.t1 .sp-rings{display:none}
+  .t1 .sp-tile:before,.t2 .sp-tile:before,.t1 .sp-clip,.t2 .sp-clip,.t1 .sp-shut,.t2 .sp-shut,.t1 .sp-line,.t2 .sp-line,.t1 #splashFx,.t2 #splashFx,.t1 .sp-vignette,.t2 .sp-vignette,.t2 .sp-rings i:nth-child(n+2){display:none}
   /* quick version (already seen this session): jump straight to the end of every animation */
   #splash.quick .sp-shut,#splash.quick .sp-line,#splash.quick .sp-tile,#splash.quick .sp-title span,#splash.quick .sp-tag,#splash.quick .sp-ticker,#splash.quick .sp-bar,#splash.quick .sp-status{animation-duration:.01s!important;animation-delay:0s!important}
-  /* light version for low-end phones: only simple fades, no canvas, no shine, one ring */
-  #splash.lite .sp-stage{background:#07070c;animation:spFade2 .5s both}
-  @keyframes spFade2{from{opacity:0}to{opacity:1}}
-  #splash.lite #splashFx,#splash.lite .sp-vignette,#splash.lite .sp-shut,#splash.lite .sp-line,#splash.lite .sp-clip,#splash.lite .sp-tile:before,#splash.lite .sp-rings i:nth-child(n+2){display:none}
-  #splash.lite .sp-tile{box-shadow:none;animation-delay:.1s}
-  #splash.lite .sp-title span{animation-delay:calc(var(--i)*.08s + .4s)}
-  #splash.lite .sp-tag{animation-delay:.9s}#splash.lite .sp-ticker{animation-delay:1s}#splash.lite .sp-bar{animation-delay:.7s}#splash.lite .sp-status{animation-delay:.8s}
-  #splash.lite.go .sp-center{animation:spExitLite .4s ease-in forwards}
-  @keyframes spExitLite{to{opacity:0}}
-  @media (prefers-reduced-motion:reduce){.sp-shut,.sp-line{display:none}.sp-tile,.sp-title span,.sp-tag,.sp-ticker,.sp-bar,.sp-status{opacity:1!important;transform:none!important}}
+  @media (prefers-reduced-motion:reduce){.sp-shut,.sp-line{display:none}.sp-tile,.sp-title span,.sp-tag,.sp-ticker,.sp-bar,.sp-status{opacity:1!important;transform:none!important;filter:none!important}}
   .lite-dev .orb,.lite-dev .hero:after{display:none}
   .lite-dev .backdrop-blur,.lite-dev .backdrop-blur-sm{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
   .lite-dev #grid article,.lite-dev #related article,.lite-dev .mv,.lite-dev .rc,.lite-dev #movGrid article{animation:none!important}
@@ -206,21 +233,53 @@
 <body>
 <div id="splash" role="status" aria-label="Loading JB TV">
   <div class="sp-stage">
+    <div class="sp-aurora" aria-hidden="true"><i></i><i></i></div>
+    <div class="sp-dots" aria-hidden="true"></div>
     <canvas id="splashFx" class="absolute inset-0 w-full h-full"></canvas>
     <div class="sp-vignette"></div>
     <div class="sp-shut t"></div><div class="sp-shut b"></div><div class="sp-line"></div>
+    <div class="sp-flash"></div>
     <div class="sp-center">
-      <div class="sp-tile"><div class="sp-rings"><i></i><i></i><i></i></div><div class="sp-clip"></div><img data-logo alt="" class="sp-logo"></div>
+      <div class="sp-tilt"><div class="sp-tile"><div class="sp-rings"><i></i><i></i><i></i></div><div class="sp-clip"></div><img data-logo alt="" class="sp-logo"></div></div>
       <h2 class="sp-title" aria-label="JB TV"><span style="--i:0" aria-hidden="true">J</span><span style="--i:1" aria-hidden="true">B</span><span class="gap" style="--i:2" aria-hidden="true"></span><span class="ac" style="--i:3" aria-hidden="true">T</span><span class="ac" style="--i:4" aria-hidden="true">V</span></h2>
       <p class="sp-tag">The world is live</p>
       <div class="sp-ticker" aria-hidden="true"><span style="animation-delay:0s">Live TV</span><span style="animation-delay:1.2s">Movies</span><span style="animation-delay:2.4s">Radio</span><span style="animation-delay:3.6s">News</span><span style="animation-delay:4.8s">Sports</span><span style="animation-delay:6s">Music</span></div>
+      <div class="sp-eq" aria-hidden="true"><i style="animation-delay:0s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.35s"></i></div>
       <div class="sp-bar"><i id="splashBar"></i></div>
       <p class="sp-status"><span id="splashTxt">Starting…</span> · <b id="splashPct">0</b>%</p>
       <p id="splashCountWrap" class="sp-count"><b id="splashCount" class="tabular-nums">0</b> channels found</p>
     </div>
   </div>
 </div>
-<script>var d=document.getElementById('splash');try{if(sessionStorage.getItem('jbSplash'))d.classList.add('quick')}catch(e){}try{var n=navigator,c=n.connection||{};if(c.saveData||(n.deviceMemory&&n.deviceMemory<=4)||(n.hardwareConcurrency&&n.hardwareConcurrency<=4)){d.classList.add('lite');document.documentElement.classList.add('lite-dev')}}catch(e){}</script>
+<script>
+/* Picks the animation level from the device's power: 4 Ultra, 3 High, 2 Medium, 1 Lite. A saved choice (About window) wins. */
+(function () {
+  var d = document.getElementById('splash'); if (!d) return;
+  var n = navigator, c = n.connection || {}, tier = 3, pref = null;
+  try { pref = localStorage.getItem('jbFx'); } catch (e) {}
+  try { if (sessionStorage.getItem('jbSplash')) d.classList.add('quick'); } catch (e) {}
+  if (/^[1-4]$/.test(pref || '')) tier = +pref;
+  else {
+    try {
+      var cores = n.hardwareConcurrency || 4, mem = n.deviceMemory || 4;
+      var s = (cores >= 8 ? 3 : cores >= 6 ? 2 : cores >= 4 ? 1 : 0) + (mem >= 8 ? 3 : mem >= 4 ? 2 : mem >= 2 ? 1 : 0);
+      var t0 = performance.now(), x = 0; for (var i = 0; i < 300000; i++) x += Math.sqrt(i);
+      var ms = performance.now() - t0; s += ms < 4 ? 2 : ms < 9 ? 1 : 0;
+      try {
+        var g = document.createElement('canvas').getContext('webgl'), ext = g && g.getExtension('WEBGL_debug_renderer_info');
+        var gpu = ext ? String(g.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+        if (/SwiftShader|llvmpipe|Software|Basic Render/i.test(gpu)) s = Math.min(s, 2);
+        if (g && g.getExtension('WEBGL_lose_context')) g.getExtension('WEBGL_lose_context').loseContext();
+      } catch (e) {}
+      tier = s >= 7 ? 4 : s >= 5 ? 3 : s >= 3 ? 2 : 1;
+      if (c.saveData || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) tier = 1;
+      if (/2g/.test(c.effectiveType || '')) tier = Math.min(tier, 2);
+    } catch (e) { tier = 2; }
+  }
+  d.classList.add('t' + tier); window.__tier = tier;
+  if (tier <= 2) document.documentElement.classList.add('lite-dev');
+})();
+</script>
 <h1 class="sr-only">JB TV – Watch live TV channels online for free</h1>
 <div id="progress"></div>
 <div class="orb" style="width:460px;height:460px;top:-160px;left:-140px"></div>
@@ -337,6 +396,7 @@
       <li class="flex gap-2" style="--i:7"><span data-ic="check" class="text-red-500 shrink-0 mt-0.5"></span>Free public-domain movies with Save and Continue watching</li>
     </ul>
     <p class="stag mt-5 text-xs t-muted"><span style="--i:7">Shortcuts: <b>Space/K</b> play·pause, <b>F</b> fullscreen, <b>M</b> mute, <b>A</b> aspect, <b>/</b> search, <b>Esc</b> back.</span></p>
+    <div class="stag mt-4 flex flex-wrap items-center justify-center gap-2 text-xs t-muted"><span>Intro animation</span><select id="fxSel" class="t-chip rounded-full px-2 py-1 outline-none"><option value="auto">Auto</option><option value="4">Ultra</option><option value="3">High</option><option value="2">Medium</option><option value="1">Lite</option></select><button id="fxPrev" class="btn !py-1 !px-3 text-xs">Preview</button><span id="fxNow"></span></div>
     <div id="accents" class="stag mt-4 flex items-center justify-center gap-2"><span class="text-xs t-muted mr-1" style="--i:8">Accent</span><button data-a="#dc2626" style="background:#dc2626"></button><button data-a="#2563eb" style="background:#2563eb"></button><button data-a="#16a34a" style="background:#16a34a"></button><button data-a="#9333ea" style="background:#9333ea"></button><button data-a="#ea580c" style="background:#ea580c"></button><button data-a="#db2777" style="background:#db2777"></button></div>
     <p class="stag mt-4 text-xs t-muted rounded-xl t-card p-3"><span style="--i:8">JB TV does not host, store or upload any video. Channels come from the public iptv-org playlists and belong to their respective owners; some may be offline or region-locked. Player powered by HLS.js.</span></p>
   </div>
@@ -498,14 +558,15 @@ async function parseM3UAsync(text, onProgress) { // same as parseM3U, but gives 
 }
 let splashDoneRes; const splashGone = new Promise(res => { splashDoneRes = res; });
 function splashStep(txt, pct) { const t = $('splashTxt'), b = $('splashBar'), p = $('splashPct'); if (t) t.textContent = txt; if (b) b.style.transform = 'scaleX(' + pct / 100 + ')'; if (p) p.textContent = pct; }
-const splashMin = () => { const sp = $('splash'); if (sp && sp.classList.contains('lite')) return 900; try { return sessionStorage.getItem('jbSplash') ? 600 : 2600; } catch (e) { return 2600; } };
-function hideSplash() { // star-warp jump, then fade out
+const splashMin = () => { const q = (() => { try { return sessionStorage.getItem('jbSplash'); } catch (e) { return null; } })(); return q ? 600 : ({ 1: 900, 2: 1600, 3: 2600, 4: 3000 })[window.__tier || 3]; };
+function hideSplash() { // jump to hyperspace (levels 3-4), then fade out
   const sp = $('splash'); if (!sp) { splashDoneRes(); return; }
   if (sp.dataset.go) return; sp.dataset.go = 1;
   try { sessionStorage.setItem('jbSplash', '1'); } catch (e) {}
   if (window.__fx) window.__fx.warp();
   sp.classList.add('go');
-  setTimeout(() => sp.classList.add('out'), sp.classList.contains('lite') ? 300 : 650);
+  const t = window.__tier || 3;
+  setTimeout(() => sp.classList.add('out'), t <= 1 ? 250 : t === 2 ? 350 : 650);
   setTimeout(() => { if (window.__fx) window.__fx.stop(); sp.remove(); splashDoneRes(); }, 1400);
 }
 async function load() {
@@ -1073,6 +1134,12 @@ function setAccent(c) {
   document.documentElement.style.setProperty('--accent', c); setObj('jbAccent', c);
   document.querySelectorAll('#accents [data-a]').forEach(b => b.classList.toggle('on', b.dataset.a === c));
 }
+try { $('fxSel').value = localStorage.getItem('jbFx') || 'auto'; } catch (e) {}
+$('fxNow').textContent = 'Detected: ' + ({ 1: 'Lite', 2: 'Medium', 3: 'High', 4: 'Ultra' })[window.__tier || 3];
+$('fxPrev').onclick = () => { // save the choice and replay the full intro
+  try { const q = $('fxSel').value; if (q === 'auto') localStorage.removeItem('jbFx'); else localStorage.setItem('jbFx', q); sessionStorage.removeItem('jbSplash'); } catch (e) {}
+  location.reload();
+};
 $('accents').onclick = e => { const b = e.target.closest('[data-a]'); if (b) setAccent(b.dataset.a); };
 setAccent(getObj('jbAccent', '#dc2626'));
 const keysOpen = () => !$('keys').classList.contains('hidden');
@@ -1538,27 +1605,46 @@ document.addEventListener('pointerdown', e => {
   b.appendChild(sp); setTimeout(() => sp.remove(), 600);
 });
 
-// ---- Splash star field (canvas, about 30 fps); switches to the light version if the device is slow ----
+// ---- Splash star field (levels 3 and 4). Level 4: 60 fps + 3D tilt. Steps down a level by itself if the device can't keep up ----
+function setTier(t) {
+  const sp = $('splash'); if (!sp) return;
+  sp.classList.remove('t1', 't2', 't3', 't4'); sp.classList.add('t' + t); window.__tier = t;
+  document.documentElement.classList.toggle('lite-dev', t <= 2);
+}
 function startFx() {
   const cv = $('splashFx'), sp = $('splash');
-  if (!cv || !sp || sp.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
-  const ctx = cv.getContext('2d');
-  let w = 0, h = 0, raf = 0, last = performance.now(), lastDraw = 0, speed = 0.0004, target = 0.0004, n = 0, slow = 0;
+  let tier = window.__tier || 3;
+  if (!cv || !sp || tier < 3) return null;
+  const ctx = cv.getContext('2d'), tilt = sp.querySelector('.sp-tilt');
+  let dpr = tier === 4 ? Math.min(devicePixelRatio || 1, 2) : 1, gap = tier === 4 ? 14 : 30;
+  let w = 0, h = 0, raf = 0, last = performance.now(), lastDraw = 0, speed = 0.0004, target = 0.0004, sum = 0, cnt = 0, tx = 0, ty = 0, ox = 0, oy = 0;
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#dc2626';
-  const resize = () => { w = cv.width = cv.clientWidth; h = cv.height = cv.clientHeight; };
-  const stop = () => { cancelAnimationFrame(raf); removeEventListener('resize', resize); ctx.clearRect(0, 0, w, h); };
+  const resize = () => { w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  const onMove = e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; };
+  const onTilt = e => { if (e.gamma == null || e.beta == null) return; tx = Math.max(-.5, Math.min(.5, e.gamma / 60)); ty = Math.max(-.5, Math.min(.5, (e.beta - 45) / 90)); };
+  const unTilt = () => { removeEventListener('pointermove', onMove); removeEventListener('deviceorientation', onTilt); if (tilt) tilt.style.transform = ''; };
+  const stop = () => { cancelAnimationFrame(raf); removeEventListener('resize', resize); unTilt(); ctx.clearRect(0, 0, w, h); };
   resize(); addEventListener('resize', resize);
+  if (tier === 4) { addEventListener('pointermove', onMove, { passive: true }); addEventListener('deviceorientation', onTilt, { passive: true }); }
   const reset = (st, far) => { st.x = (Math.random() - .5) * 2.2; st.y = (Math.random() - .5) * 2.2; st.z = far ? 1 : Math.random() * .98 + .02; st.c = Math.random() < .18 ? accent : '#ffffff'; return st; };
-  const stars = Array.from({ length: innerWidth < 600 ? 60 : 110 }, () => reset({}, false));
+  const small = innerWidth < 600, stars = Array.from({ length: tier === 4 ? (small ? 130 : 240) : (small ? 60 : 110) }, () => reset({}, false));
   const frame = now => {
     raf = requestAnimationFrame(frame);
-    if (now - lastDraw < 30) return;
-    const dt = Math.min(80, now - last); last = now; lastDraw = now;
-    if (++n > 8 && n <= 48 && dt > 70) slow++;
-    if (n === 48 && slow > 12) { sp.classList.add('lite'); document.documentElement.classList.add('lite-dev'); stop(); return; } // too slow: use the light version
+    if (now - lastDraw < gap) return;
+    const raw = now - last, dt = Math.min(80, raw); last = now; lastDraw = now;
+    if (++cnt > 6) sum += raw;
+    if (cnt === 46) { // every 40 frames: can this device keep up? if not, go down one level
+      const avg = sum / 40; sum = 0; cnt = 0;
+      if (avg > (tier === 4 ? 30 : 62)) {
+        tier--; setTier(tier);
+        if (tier < 3) { stop(); return; }
+        gap = 30; dpr = 1; stars.length = Math.min(stars.length, small ? 60 : 110); unTilt(); resize();
+      }
+    }
     speed += (target - speed) * Math.min(1, dt / 160);
+    if (tier === 4) { ox += (tx - ox) * .08; oy += (ty - oy) * .08; if (tilt) tilt.style.transform = 'perspective(700px) rotateY(' + ox * 16 + 'deg) rotateX(' + -oy * 16 + 'deg)'; }
     ctx.clearRect(0, 0, w, h);
-    const cx = w / 2, cy = h * .46, f = Math.min(w, h) * .217;
+    const cx = w / 2 - ox * 40, cy = h * .46 - oy * 40, f = Math.min(w, h) * .217;
     for (const st of stars) {
       const pz = st.z; st.z -= speed * dt;
       if (st.z <= 0.02) { reset(st, true); continue; }
@@ -1570,7 +1656,7 @@ function startFx() {
     ctx.globalAlpha = 1;
   };
   raf = requestAnimationFrame(frame);
-  return { warp() { target = 0.0045; }, stop };
+  return { warp() { target = tier === 4 ? 0.006 : 0.0045; }, stop };
 }
 window.__fx = startFx();
 
